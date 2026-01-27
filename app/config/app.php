@@ -28,12 +28,12 @@ if ($environment === 'development') {
   return [
     'db' => [
       'host'     => env('DB_HOST', 'localhost'),
-      'dbname'   => env('DB_NAME', 'talent'),
+      'dbname'   => env('DB_NAME', 'fullstack-test-eplc'),
       'username' => env('DB_USER', 'root'),
       'password' => env('DB_PASS', 'root')
     ],
     'debug' => env('APP_DEBUG', 'true') === 'true',
-    'app_name' => env('APP_NAME', 'Sub Sistem Talent (Dev)'),
+    'app_name' => env('APP_NAME', 'MAZU'),
     'database' => require __DIR__ . '/database.php',
     'view' => require __DIR__ . '/view.php',
   ];
@@ -41,12 +41,12 @@ if ($environment === 'development') {
   return [
     'db' => [
       'host'     => env('DB_HOST', 'localhost'),
-      'dbname'   => env('DB_NAME', 'talent'),
+      'dbname'   => env('DB_NAME', 'fullstack-test-eplc'),
       'username' => env('DB_USER', 'root'),
       'password' => env('DB_PASS', '')
     ],
     'debug' => env('APP_DEBUG', 'false') === 'true',
-    'app_name' => env('APP_NAME', 'Sub Sistem Talent'),
+    'app_name' => env('APP_NAME', 'MAZU'),
     'database' => require __DIR__ . '/database.php',
     'view' => require __DIR__ . '/view.php',
   ];
