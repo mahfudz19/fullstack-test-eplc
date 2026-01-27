@@ -1,0 +1,77 @@
+# Environment Configuration
+.env*
+public/uploads
+public/css/global.css
+
+# Storage
+storage/logs/*
+!storage/logs/.gitkeep
+
+# Database
+*.sql.backup
+database-backup/
+
+# Cache and logs
+storage/cache*
+cache/*
+!cache/.gitkeep
+logs/*
+!logs/.gitkeep
+*.log
+
+# Uploaded files
+uploads/*
+!uploads/.gitkeep
+public/assets/uploads/*
+!public/assets/uploads/.gitkeep
+
+# Temporary files
+tmp/*
+!tmp/.gitkeep
+temp/*
+
+# IDE and Editor files
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Debug files
+debug-*.php
+phpinfo.php
+test-*.php
+
+# Backup files
+*.backup
+*.bak
+*~
+
+# Composer
+composer.phar
+/vendor/
+
+# Node modules (if using frontend build tools)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+
+# Configuration backups
+config/*.backup
+config/*.old
+.systemd-services-dev
+*lock*
+*.pdf

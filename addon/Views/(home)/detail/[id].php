@@ -1,0 +1,5 @@
+<?php dump(
+  [
+    'item' => $item
+  ]
+);

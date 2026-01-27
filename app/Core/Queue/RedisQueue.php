@@ -1,0 +1,50 @@
+<?php
+
+namespace App\Core\Queue;
+
+use App\Core\DatabaseManager;
+
+class RedisQueue implements QueueInterface
+{
+  private $redis;
+
+  public function __construct(DatabaseManager $db)
+  {
+    // Pastikan DatabaseManager sudah kita refaktor untuk support 'redis' connection
+    $this->redis = $db->connection('redis_queue');
+  }
+
+  public function push(string $jobClass, array $data = [], string $queue = 'default')
+  {
+    $payload = [
+      'job_class' => $jobClass,
+      'data' => $data,
+      'attempts' => 0,
+      'dispatched_at' => date('Y-m-d H:i:s')
+    ];
+
+    $queueKey = "queue:{$queue}";
+    return $this->redis->lpush($queueKey, json_encode($payload));
+  }
+
+  public function pop(string $queue = 'default', bool $blocking = true)
+  {
+    $queueKey = "queue:{$queue}";
+
+    if ($blocking) {
+      // brpop returns [key, value] or null if timeout
+      // timeout 5 seconds
+      $result = $this->redis->brpop([$queueKey], 5);
+    } else {
+      // rpop returns value or null
+      $value = $this->redis->rpop($queueKey);
+      $result = $value ? [$queueKey, $value] : null;
+    }
+
+    if (!empty($result) && isset($result[1])) {
+      return json_decode($result[1], true);
+    }
+
+    return null;
+  }
+}

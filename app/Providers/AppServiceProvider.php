@@ -1,0 +1,81 @@
+<?php
+
+namespace App\Providers;
+
+use App\Core\Container;
+use App\Core\Database;
+use App\Core\DatabaseManager;
+use App\Core\JobDispatcher;
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\ServiceProvider;
+use App\Services\ConfigService;
+use App\Services\SeoService;
+use App\Services\SessionService;
+use Addon\Services\FeederApiService;
+use Predis\Client as RedisClient;
+
+class AppServiceProvider extends ServiceProvider
+{
+  public function register(Container $container): void
+  {
+    // Response
+    $container->bind(Response::class, function () use ($container) {
+      return new Response($container);
+    });
+
+    // ConfigService (singleton)
+    $container->bind(ConfigService::class, function () {
+      static $instance = null;
+      if ($instance === null) {
+        $instance = new ConfigService();
+      }
+      return $instance;
+    });
+
+    // SessionService (singleton)
+    $container->bind(SessionService::class, function () {
+      static $instance = null;
+      if ($instance === null) {
+        $instance = new SessionService();
+      }
+      return $instance;
+    });
+
+    // DatabaseManager (singleton)
+    $container->bind(DatabaseManager::class, function () use ($container) {
+      static $instance = null;
+      if ($instance === null) {
+        $instance = new DatabaseManager($container->resolve(ConfigService::class));
+      }
+      return $instance;
+    });
+
+    // Database (singleton) - Delegates to DatabaseManager
+    $container->bind(Database::class, function () use ($container) {
+      return $container->resolve(DatabaseManager::class)->connection('mysql');
+    });
+
+    // RedisClient (singleton) - Delegates to DatabaseManager (redis_default)
+    $container->bind(RedisClient::class, function () use ($container) {
+      return $container->resolve(DatabaseManager::class)->connection('redis_default');
+    });
+
+    // JobDispatcher (singleton)
+    $container->singleton(JobDispatcher::class, function () use ($container) {
+      return new JobDispatcher($container->resolve(DatabaseManager::class));
+    });
+
+    // FeederApiService (bisa per request, tidak perlu singleton)
+    $container->bind(FeederApiService::class, function () use ($container) {
+      return new FeederApiService($container->resolve(RedisClient::class));
+    });
+
+    $container->singleton(SeoService::class, function () use ($container) {
+      return new SeoService(
+        $container->resolve(ConfigService::class),
+        $container->resolve(Request::class)
+      );
+    });
+  }
+}
