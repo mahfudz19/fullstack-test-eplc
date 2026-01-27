@@ -68,7 +68,12 @@ class ServeCommand implements CommandInterface
     ];
 
     // Environment variables for the child process
-    $env = array_merge($_SERVER, [
+    // Filter $_SERVER to remove non-scalar values (like 'argv') to avoid Array to string conversion warning
+    $cleanServerEnv = array_filter($_SERVER, function($value) {
+        return is_scalar($value);
+    });
+
+    $env = array_merge($cleanServerEnv, [
       'APP_ENV' => 'development',
       'APP_DEBUG' => 'true'
     ]);
