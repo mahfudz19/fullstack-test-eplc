@@ -20,7 +20,14 @@ Implementasi logika untuk penggabungan array, pengurutan, dan pencarian data yan
 
 ## 🚀 Bagian 2: Simple Task Management API
 
-Studi kasus pembuatan REST API untuk manajemen tugas.
+Studi kasus pembuatan REST API untuk manajemen tugas. Project ini dibangun menggunakan **Mazu Framework**, sebuah lightweight engine buatan sendiri yang dirancang khusus untuk performa tinggi dan kemudahan pengembangan aplikasi modern berbasis SPA (Single Page Application).
+
+### 🛠️ Tech Stack & Engine
+- **Engine**: [Mazu Framework](https://github.com/your-username/mazu-framework) (Custom Built)
+- **Backend**: PHP 8.1+ (Native-based architecture)
+- **Frontend**: Native CSS & JavaScript (SPA logic)
+- **Database**: MySQL / SQLite
+- **Dependency Manager**: Composer
 
 ### Requirements
 - PHP 8.1+
