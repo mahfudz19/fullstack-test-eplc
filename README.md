@@ -53,9 +53,9 @@ Studi kasus pembuatan REST API untuk manajemen tugas. Project ini dibangun mengg
 
 3.  **Konfigurasi Database**
     - Copy `.env.example` ke `.env` (jika ada) atau buat file `.env` baru.
-    - Atur koneksi database di `app/Services/ConfigService.php` atau `.env`.
+    - Atur koneksi database di `app/config/app.php` atau `.env`.
 
-    _Catatan: Project ini menggunakan konfigurasi hardcoded di `app/Services/ConfigService.php` jika .env belum disetup._
+    _Catatan: Project ini menggunakan konfigurasi hardcoded di `app/config/app.php` jika .env belum disetup._
 
 4.  **Migrasi Database**
     Jalankan perintah migrasi untuk membuat tabel:
