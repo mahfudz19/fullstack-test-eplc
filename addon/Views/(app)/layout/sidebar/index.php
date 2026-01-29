@@ -112,7 +112,7 @@ $navigation = require __DIR__ . '/navigation-config.php';
   <?php endforeach; ?>
 
   <?php if ($role !== 'guest') : ?>
-    <a data-spa href="<?php echo getBaseUrl('/logout'); ?>" onclick="localStorage.removeItem('token'); localStorage.removeItem('user'); if(window.spa && window.spa.clearCache) window.spa.clearCache()" class="menu-item">
+    <a data-spa data-spa-method="POST" href="<?php echo getBaseUrl('/logout'); ?>" onclick="localStorage.removeItem('token'); localStorage.removeItem('user'); if(window.spa && window.spa.clearCache) window.spa.clearCache()" class="menu-item">
       <i class="bi bi-box-arrow-right menu-icon"></i>
       <span class="menu-text">Logout</span>
     </a>

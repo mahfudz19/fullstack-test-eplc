@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Core;
+namespace App\Core\Foundation;
 
 use App\Core\Interfaces\MiddlewareInterface;
 use App\Exceptions\HttpException;
@@ -23,7 +23,7 @@ class Kernel
       return self::$middlewareCache;
     }
 
-    $middlewareDir = __DIR__ . '/../../addon/Middleware';
+    $middlewareDir = __DIR__ . '/../../../addon/Middleware';
     $middlewares = [];
 
     if (!is_dir($middlewareDir)) {

@@ -25,7 +25,7 @@
 <script>
   // Check if user is already logged in
   if (localStorage.getItem('token')) {
-    window.location.href = '/dashboard';
+    window.location.href = '<?= getBaseUrl('/dashboard') ?>';
   }
 
   document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -42,7 +42,7 @@
     submitBtn.textContent = 'Signing in...';
 
     try {
-      const response = await fetch('/api/login', {
+      const response = await fetch('<?= getBaseUrl('/api/login') ?>', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -64,9 +64,9 @@
         // Redirect ke dashboard
         if (window.spa && window.spa.push) {
           window.spa.clearCache();
-          window.spa.push('/dashboard');
+          window.spa.push('<?= getBaseUrl('/dashboard') ?>');
         } else {
-          window.location.href = '/dashboard';
+          window.location.href = '<?= getBaseUrl('/dashboard') ?>';
         }
       } else {
         errorDiv.textContent = data.message || 'Login failed. Please check your credentials.';

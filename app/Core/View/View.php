@@ -1,7 +1,11 @@
 <?php
 
-namespace App\Core;
+namespace App\Core\View;
 
+use App\Core\Foundation\Container;
+use App\Core\Http\Request;
+use App\Core\Http\Response;
+use App\Core\Interfaces\RenderableInterface;
 use App\Services\ViewService;
 
 class View implements RenderableInterface
@@ -144,7 +148,26 @@ class View implements RenderableInterface
    */
   public static function renderScripts(): string
   {
+    // Menggunakan env() helper secara langsung karena App::config() tidak tersedia
+    $config = require __DIR__ . '/../../config/app.php';
+    $spaConfig = $config['spa'] ?? [];
+    $authConfig = $config['auth'] ?? [];
+
+    $authPublic = [
+      'mode' => $authConfig['mode'] ?? 'token',
+      'token_header' => $authConfig['token_header'] ?? 'Authorization',
+      'token_prefix' => $authConfig['token_prefix'] ?? 'Bearer',
+      'token_key' => $authConfig['token_key'] ?? 'token',
+      'token_cookie' => $authConfig['token_cookie'] ?? 'token',
+      'user_key' => $authConfig['user_key'] ?? 'user',
+      'token_storage' => $authConfig['token_storage'] ?? 'cookie',
+      'redirect_login' => $authConfig['redirect_login'] ?? '/login',
+      'auto_attach' => $authConfig['auto_attach'] ?? true,
+      'auto_logout' => $authConfig['auto_logout'] ?? true,
+    ];
+
     $html = '';
+    $html .= '<script>window.mazuConfig = ' . json_encode(['spa' => $spaConfig, 'auth' => $authPublic]) . ';</script>' . PHP_EOL;
     $html .= '<script src="' . getBaseUrl('build/js/spa.js') . '"></script>' . PHP_EOL;
     return $html;
   }
@@ -166,42 +189,14 @@ class View implements RenderableInterface
 
     if ($request->isSpaRequest()) {
       // 1. Minify HTML Output (Hapus spasi berlebih, enter, dan tab)
-      // Ini akan memangkas ukuran payload secara drastis
       $output = preg_replace('/>\s+</', '><', $output);
       $output = preg_replace('/\s+/', ' ', $output);
       $output = trim($output);
 
-      // --- ETag Implementation ---
-      // Generate hash unik dari konten
-      $etag = '"' . md5($output) . '"';
-
-      // Cek apakah browser mengirim ETag yang sama
-      if (
-        isset($request->server['HTTP_IF_NONE_MATCH']) &&
-        trim($request->server['HTTP_IF_NONE_MATCH']) === $etag
-      ) {
-
-        // Konten tidak berubah, kirim 304 Not Modified
-        header('HTTP/1.1 304 Not Modified');
-        header('ETag: ' . $etag);
-        header('Cache-Control: no-cache'); // Pastikan browser selalu validasi ke server
-        exit; // Stop eksekusi, hemat bandwidth
-      }
-
-      // Aktifkan GZIP Compression jika didukung browser
-      if (strpos($request->server['HTTP_ACCEPT_ENCODING'] ?? '', 'gzip') !== false) {
-        $output = gzencode($output, 9); // Level 9 = Maksimum Kompresi
-        $response = new Response($container, $output);
-        $response->setHeader('Content-Encoding', 'gzip');
-        $response->setHeader('Content-Length', (string)strlen($output));
-      } else {
-        $response = new Response($container, $output);
-      }
-
+      $response = new Response($container, $output);
       $response->setHeader('Content-Type', 'application/json');
-      $response->setHeader('ETag', $etag); // Kirim ETag ke browser
-      $response->setHeader('Cache-Control', 'no-cache'); // Instruksikan browser untuk selalu validasi ETag
-      $response->setHeader('Vary', 'X-SPA-REQUEST, X-SPA-TARGET-LAYOUT, X-SPA-LAYOUTS'); // Cegah browser menggunakan cache ini untuk request biasa
+      $response->setHeader('Cache-Control', 'no-cache');
+      $response->setHeader('Vary', 'X-SPA-REQUEST, X-SPA-TARGET-LAYOUT, X-SPA-LAYOUTS');
       return $response;
     }
 

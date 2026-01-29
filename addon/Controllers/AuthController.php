@@ -4,49 +4,13 @@ namespace Addon\Controllers;
 
 use Addon\Models\TaskModel;
 use Addon\Models\UserModel;
-use App\Core\Request;
-use App\Core\Response;
-use App\Core\View;
+use App\Core\Http\Request;
+use App\Core\Http\Response;
+use App\Core\View\View;
 
 class AuthController
 {
   public function __construct(private UserModel $userModel,  private TaskModel $taskModel) {}
-
-  public function logout(Request $request, Response $response): void
-  {
-    if ($request->isSpaRequest()) {
-      $response->json(['redirect' => '/login', 'force_reload' => false]);
-      return;
-    }
-
-    $html = <<<HTML
-      <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <title>Logging out...</title>
-            <script src="https://cdn.tailwindcss.com"></script>
-        </head>
-        <body class="flex items-center justify-center h-screen bg-gray-100">
-            <div class="text-gray-500">
-                <p>Logging out...</p>
-            </div>
-            <script>
-                (function() {
-                    // Hapus semua data sesi
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    
-                    // Redirect ke login
-                    window.location.replace('/login');
-                })();
-            </script>
-        </body>
-      </html>
-    HTML;
-
-    $response->setContent($html)->send();
-  }
 
   public function index(Request $request, Response $response)
   {
@@ -62,6 +26,26 @@ class AuthController
       ],
       ['meta' => ['title' => 'My Tasks']]
     );
+  }
+
+  public function logout(Request $request, Response $response): void
+  {
+    // Best Practice: Logout harus selalu POST untuk mencegah CSRF & Prefetch logout tidak sengaja
+    if ($request->getMethod() !== 'post') {
+      $response->setStatusCode(405)->json(['message' => 'Method Not Allowed']);
+      return;
+    }
+
+    // Server-side cleanup (jika menggunakan session/cookie di masa depan)
+    // ...
+
+    // Instruksikan Client (SPA) untuk menghapus token dan redirect
+    // Kita kirim instruksi khusus yang bisa ditangkap oleh SPA handler
+    $response->json([
+      'action' => 'logout',
+      'redirect' => getBaseUrl('/login'),
+      'message' => 'Logged out successfully'
+    ]);
   }
 
   public function page(Request $request, Response $response): View

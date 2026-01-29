@@ -93,7 +93,7 @@ foreach ($navigationConfig as $section) {
         </div>
         <div style="display: flex; gap: 1rem; align-items: center;">
           <span id="headerUserName" style="font-size: 0.875rem; color: #64748b;">Hi, Guest</span>
-          <a data-spa href="<?= getBaseUrl('/logout') ?>"
+          <a data-spa data-spa-method="POST" href="<?= getBaseUrl('/logout') ?>"
             onclick="localStorage.removeItem('token'); localStorage.removeItem('user'); if(window.spa) window.spa.clearCache();"
             style="font-size: 0.875rem; color: #ef4444; text-decoration: none; font-weight: 500; cursor: pointer;">
             Logout

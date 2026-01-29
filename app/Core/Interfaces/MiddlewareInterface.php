@@ -7,7 +7,7 @@ interface MiddlewareInterface
   /**
    * Menjalankan logika middleware.
    *
-   * @param \App\Core\Request $request
+   * @param \App\Core\Http\Request $request
    * @param \Closure $next
    * @param array $params Parameter dari rute (misal: ['admin', 'mahasiswa'])
    * @return mixed

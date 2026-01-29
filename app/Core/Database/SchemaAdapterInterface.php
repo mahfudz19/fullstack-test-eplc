@@ -2,8 +2,6 @@
 
 namespace App\Core\Database;
 
-use App\Core\Database;
-
 interface SchemaAdapterInterface
 {
   /**

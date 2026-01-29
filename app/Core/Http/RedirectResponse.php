@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Core;
+namespace App\Core\Http;
+
+use App\Core\Foundation\Container;
 
 class RedirectResponse extends Response
 {
@@ -55,7 +57,7 @@ class RedirectResponse extends Response
       // Ubah ke 200 OK agar fetch tidak otomatis mengikuti redirect (yang akan me-load HTML page baru sebagai response text)
       // Kita ingin SPA client menangani redirect ini secara manual.
       $this->statusCode = 200;
-      
+
       // Hapus header Location agar browser/fetch tidak bingung
       unset($this->headers['Location']);
 

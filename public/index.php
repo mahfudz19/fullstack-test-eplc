@@ -19,7 +19,7 @@ if (isProduction()) {
 }
 
 // 1. Buat instance aplikasi
-$app = new App\Core\Application();
+$app = new App\Core\Foundation\Application();
 
 // 2. Jalankan aplikasi
 $app->run();

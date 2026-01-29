@@ -2,8 +2,8 @@
 
 namespace App\Core\Controllers;
 
-use App\Core\Response;
-use App\Core\Request;
+use App\Core\Http\Request;
+use App\Core\Http\Response;
 
 class AssetController
 {

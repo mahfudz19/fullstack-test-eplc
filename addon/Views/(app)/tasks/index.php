@@ -72,7 +72,7 @@
                   <button onclick="openModal('edit', <?= $task['id'] ?>)" class="btn-action btn-edit" title="Edit">
                     <i class="bi bi-pencil"></i>
                   </button>
-                  <button onclick="if(confirm('Are you sure?')) { fetch('/tasks/<?= $task['id'] ?>', { method: 'DELETE', headers: {'X-SPA-REQUEST': 'true', 'Authorization': `Bearer ${localStorage.getItem('token')}`} }).then(r => r.json()).then(d => { if(window.spa) window.spa.push(d.redirect); else window.location.reload(); }); }" class="btn-action btn-delete" title="Delete">
+                  <button onclick="if(confirm('Are you sure?')) { fetch(<?= getBaseUrl('/tasks') ?>'/<?= $task['id'] ?>', { method: 'DELETE', headers: {'X-SPA-REQUEST': 'true', 'Authorization': `Bearer ${localStorage.getItem('token')}`} }).then(r => r.json()).then(d => { if(window.spa) window.spa.push(d.redirect); else window.location.reload(); }); }" class="btn-action btn-delete" title="Delete">
                     <i class="bi bi-trash"></i>
                   </button>
                 </div>
@@ -244,14 +244,14 @@
     container.style.opacity = '0.5';
 
     try {
-      const response = await fetch(`/api/tasks?page=${currentPage}&limit=${limit}&search=${search}&sort=${sortBy}&order=${sortOrder}`, {
+      const response = await fetch(`<?= getBaseUrl('/api/tasks') ?>?page=${currentPage}&limit=${limit}&search=${search}&sort=${sortBy}&order=${sortOrder}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
 
       if (response.status === 401) {
-        window.location.href = '/login';
+        window.location.href = '<?= getBaseUrl('/login') ?>';
         return;
       }
 
@@ -318,7 +318,7 @@
                   <button onclick="openModal('edit', ${task.id})" style="padding: 0.5rem; border-radius: 0.5rem; color: var(--primary-600); background: none; border: none; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--primary-50)'" onmouseout="this.style.backgroundColor='transparent'" title="Edit">
                     <i class="bi bi-pencil"></i>
                   </button>
-                  <button onclick="if(confirm('Are you sure?')) { fetch('/tasks/${task.id}', { method: 'DELETE', headers: {'X-SPA-REQUEST': 'true', 'Authorization': 'Bearer ' + localStorage.getItem('token')} }).then(r => r.json()).then(d => { if(window.spa) window.spa.push(d.redirect); else window.location.reload(); }); }" style="padding: 0.5rem; border-radius: 0.5rem; color: #ef4444; background: none; border: none; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#fef2f2'" onmouseout="this.style.backgroundColor='transparent'" title="Delete">
+                  <button onclick="if(confirm('Are you sure?')) { fetch('<?= getBaseUrl('/tasks') ?>/${task.id}', { method: 'DELETE', headers: {'X-SPA-REQUEST': 'true', 'Authorization': 'Bearer ' + localStorage.getItem('token')} }).then(r => r.json()).then(d => { if(window.spa) window.spa.push(d.redirect); else window.location.reload(); }); }" style="padding: 0.5rem; border-radius: 0.5rem; color: #ef4444; background: none; border: none; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#fef2f2'" onmouseout="this.style.backgroundColor='transparent'" title="Delete">
                     <i class="bi bi-trash"></i>
                   </button>
             </div>
@@ -416,7 +416,7 @@
     const status = document.getElementById('task-status').value;
 
     const isEdit = !!id;
-    const url = isEdit ? `/tasks/${id}` : '/tasks';
+    const url = isEdit ? `<?= getBaseUrl('/tasks') ?>/${id}` : '<?= getBaseUrl('/tasks') ?>';
     const method = isEdit ? 'PUT' : 'POST';
 
     const payload = {

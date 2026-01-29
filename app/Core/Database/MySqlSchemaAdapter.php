@@ -2,8 +2,6 @@
 
 namespace App\Core\Database;
 
-use App\Core\Database;
-
 class MySqlSchemaAdapter implements SchemaAdapterInterface
 {
   public function tableExists(Database $db, string $table): bool

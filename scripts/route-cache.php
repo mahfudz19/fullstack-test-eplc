@@ -5,7 +5,7 @@
 // Karena scripts/ ada di root, sama seperti tools/, path ke vendor tetap sama
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use App\Core\Application;
+use App\Core\Foundation\Application;
 
 echo "Generating route cache...\n";
 
@@ -43,9 +43,9 @@ $routes = $router->getRoutes();
 // Validasi: Cek apakah ada Closure (fungsi anonim) dalam rute
 // Route Cache TIDAK BISA menyimpan Closure.
 array_walk_recursive($routes, function ($value) use ($cacheFile) {
-    if ($value instanceof \Closure) {
-        // Hapus file cache parsial jika ada
-        if (file_exists($cacheFile)) unlink($cacheFile);
+  if ($value instanceof \Closure) {
+    // Hapus file cache parsial jika ada
+    if (file_exists($cacheFile)) unlink($cacheFile);
 
     echo "\n\033[31m[ERROR] Route Cache Failed!\033[0m\n";
     echo "Ditemukan 'Closure' (fungsi anonim) dalam definisi rute.\n";

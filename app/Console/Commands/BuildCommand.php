@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Core\Application;
+use App\Core\Foundation\Application;
 use App\Console\Contracts\CommandInterface;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -50,31 +50,85 @@ class BuildCommand implements CommandInterface
 
   private function minifyAssets(): void
   {
-    $script = realpath(__DIR__ . '/../../../scripts/minify.js');
-    if (!$script || !file_exists($script)) {
-      echo color("   Minify script not found at scripts/minify.js\n", "yellow");
+    echo "   Running PHP Native Minification...\n";
+    $buildDir = realpath(__DIR__ . '/../../../public/build');
+
+    if (!$buildDir || !is_dir($buildDir)) {
+      echo color("   Build directory not found.\n", "yellow");
       return;
     }
 
-    // Cek ketersediaan Node.js
-    exec('node -v', $out, $ret);
-    if ($ret !== 0) {
-      echo color("   Node.js not found. Skipping minification.\n", "yellow");
-      return;
-    }
+    $files = new RecursiveIteratorIterator(
+      new RecursiveDirectoryIterator($buildDir, RecursiveDirectoryIterator::SKIP_DOTS)
+    );
 
-    echo "   Running esbuild minification...\n";
-    exec("node " . escapeshellarg($script), $output, $returnVar);
-
-    if ($returnVar === 0) {
-      echo "   Minification successful.\n";
-    } else {
-      echo color("   Minification failed. Ensure 'npm install' is run.\n", "red");
-      // Optional: Tampilkan error output
-      foreach ($output as $line) {
-        echo "   > $line\n";
+    $count = 0;
+    foreach ($files as $file) {
+      if ($file->isFile()) {
+        $ext = $file->getExtension();
+        if ($ext === 'css') {
+          $this->minifyCss($file->getRealPath());
+          $count++;
+        } elseif ($ext === 'js') {
+          $this->minifyJs($file->getRealPath());
+          $count++;
+        }
       }
     }
+
+    echo "   Minified $count files successfully.\n";
+  }
+
+  private function minifyCss(string $path): void
+  {
+    $content = file_get_contents($path);
+    // Remove comments
+    $content = preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $content);
+    // Remove whitespace
+    $content = str_replace(["\r\n", "\r", "\n", "\t"], '', $content);
+    $content = preg_replace('/\s{2,}/', ' ', $content);
+    $content = str_replace([': ', ' :'], ':', $content);
+    $content = str_replace([' {', '{ '], '{', $content);
+    $content = str_replace(['; ', ' ;'], ';', $content);
+    $content = str_replace([', ', ' ,'], ',', $content);
+    file_put_contents($path, $content);
+    echo "   Minified CSS: " . basename($path) . "\n";
+  }
+
+  private function minifyJs(string $path): void
+  {
+    $content = file_get_contents($path);
+    
+    // Simple JS Minifier (Safe Mode)
+    // 1. Remove block comments
+    $content = preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $content);
+    
+    // 2. Remove line comments (hati-hati dengan URL http://)
+    // Regex ini mencari // yang tidak didahului oleh : (untuk menghindari http://)
+    // dan tidak berada dalam string. Ini cukup kompleks, jadi kita gunakan pendekatan aman:
+    // Hanya hapus baris yang diawali dengan // (setelah trim) atau // di akhir baris yang aman.
+    
+    // Split lines
+    $lines = explode("\n", $content);
+    $newLines = [];
+    foreach ($lines as $line) {
+        $trim = trim($line);
+        // Skip empty lines or full comment lines
+        if (empty($trim) || str_starts_with($trim, '//')) {
+            continue;
+        }
+        // Remove trailing comments (simple check)
+        // Note: This is risky without a parser if // appears inside a string like "http://..."
+        // So we will just trim whitespace for safety in "Pure PHP" mode without tokenizer.
+        $newLines[] = $trim;
+    }
+    $content = implode("\n", $newLines);
+
+    // 3. Remove extra whitespace
+    // $content = preg_replace('/\s+/', ' ', $content); // Risky for JS due to ASI (Automatic Semicolon Insertion)
+
+    file_put_contents($path, $content);
+    echo "   Minified JS: " . basename($path) . "\n";
   }
 
   private function publishCoreAssets(): void

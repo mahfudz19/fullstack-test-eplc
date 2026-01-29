@@ -13,9 +13,9 @@
     const token = localStorage.getItem('token');
     if (!token) {
       if (window.spa) {
-        window.spa.push('/login');
+        window.spa.push('<?= getBaseUrl('/login') ?>');
       } else {
-        window.location.href = '/login';
+        window.location.href = '<?= getBaseUrl('/login') ?>';
       }
     }
   })();

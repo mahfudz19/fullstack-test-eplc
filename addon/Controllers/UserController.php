@@ -2,11 +2,11 @@
 
 namespace Addon\Controllers;
 
-use App\Core\Request;
-use App\Core\Response;
-use App\Core\View;
-use App\Core\RedirectResponse;
 use Addon\Models\UserModel;
+use App\Core\Http\RedirectResponse;
+use App\Core\Http\Request;
+use App\Core\Http\Response;
+use App\Core\View\View;
 
 class UserController
 {

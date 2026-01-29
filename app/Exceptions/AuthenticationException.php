@@ -2,10 +2,10 @@
 
 namespace App\Exceptions;
 
-use App\Core\Container;
-use App\Core\RedirectResponse;
-use App\Core\Response;
-use App\Core\RenderableInterface;
+use App\Core\Foundation\Container;
+use App\Core\Http\RedirectResponse;
+use App\Core\Http\Response;
+use App\Core\Interfaces\RenderableInterface;
 
 class AuthenticationException extends \Exception implements RenderableInterface
 {

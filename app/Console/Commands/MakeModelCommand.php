@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Core\Application;
+use App\Core\Foundation\Application;
 use App\Console\Contracts\CommandInterface;
 use Doctrine\Inflector\Inflector;
 use Doctrine\Inflector\InflectorFactory;
@@ -57,7 +57,7 @@ class MakeModelCommand implements CommandInterface
 
 namespace Addon\Models;
 
-use App\Core\Model;
+use App\Core\Database\Model;
 
 class {{CLASS_NAME}} extends Model
 {

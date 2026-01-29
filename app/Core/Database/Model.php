@@ -1,6 +1,9 @@
 <?php
 
-namespace App\Core;
+namespace App\Core\Database;
+
+use App\Core\Database\Database;
+use App\Core\Database\DatabaseManager;
 
 abstract class Model
 {

@@ -2,7 +2,7 @@
 
 namespace App\Core\Queue;
 
-use App\Core\DatabaseManager;
+use App\Core\Database\DatabaseManager;
 
 class RedisQueue implements QueueInterface
 {

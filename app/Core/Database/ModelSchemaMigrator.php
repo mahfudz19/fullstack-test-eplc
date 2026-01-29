@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Core;
+namespace App\Core\Database;
 
-use App\Core\Database;
-use App\Core\DatabaseManager;
-use App\Core\Container;
-use App\Core\Model;
+use App\Core\Database\Database;
+use App\Core\Database\DatabaseManager;
+use App\Core\Database\Model;
 use App\Core\Database\SchemaAdapterInterface;
 use App\Core\Database\MySqlSchemaAdapter;
+use App\Core\Foundation\Container;
 
 class ModelSchemaMigrator
 {

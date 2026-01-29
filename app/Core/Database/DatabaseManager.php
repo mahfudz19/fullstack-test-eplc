@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Core;
+namespace App\Core\Database;
 
+use App\Core\Database\Database;
 use App\Services\ConfigService;
 use InvalidArgumentException;
 
@@ -60,7 +61,7 @@ class DatabaseManager
     $driver = $config['driver'] ?? 'mysql';
 
     if ($driver === 'redis') {
-        return $this->createRedisConnection($config);
+      return $this->createRedisConnection($config);
     }
 
     // Default to PDO Database class (MySQL, SQLite, etc)
@@ -70,15 +71,15 @@ class DatabaseManager
   protected function createRedisConnection(array $config)
   {
     $parameters = [
-        'scheme' => 'tcp',
-        'host'   => $config['host'],
-        'port'   => $config['port'] ?? 6379,
-        'database' => $config['database'] ?? 0,
-        'read_write_timeout' => 0,
+      'scheme' => 'tcp',
+      'host'   => $config['host'],
+      'port'   => $config['port'] ?? 6379,
+      'database' => $config['database'] ?? 0,
+      'read_write_timeout' => 0,
     ];
-    
+
     if (!empty($config['password'])) {
-        $parameters['password'] = $config['password'];
+      $parameters['password'] = $config['password'];
     }
 
     return new \Predis\Client($parameters);

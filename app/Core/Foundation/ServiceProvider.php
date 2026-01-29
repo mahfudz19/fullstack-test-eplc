@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Core;
+namespace App\Core\Foundation;
 
 /**
  * Base class untuk semua Service Providers di aplikasi.
@@ -11,7 +11,7 @@ abstract class ServiceProvider
   /**
    * Register any application services.
    *
-   * @param \App\Core\Container $container
+   * @param Container $container
    * @return void
    */
   abstract public function register(Container $container): void;

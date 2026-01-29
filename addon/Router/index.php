@@ -10,7 +10,7 @@ $router->get('/', [AuthController::class, 'index']);
 // 1. Login (Public)
 $router->get('/login', [AuthController::class, 'page']);
 $router->post('/api/login', [AuthController::class, 'login']);
-$router->get('/logout', [AuthController::class, 'logout']); // Fix 404 Logout
+$router->post('/logout', [AuthController::class, 'logout']);
 
 // Protected Routes
 $router->group(['middleware' => ['auth']], function ($router) {

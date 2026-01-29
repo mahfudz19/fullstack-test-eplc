@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Core\Application;
+use App\Core\Foundation\Application;
 use App\Console\Contracts\CommandInterface;
 
 class MakeMiddlewareCommand implements CommandInterface
@@ -49,7 +49,7 @@ class MakeMiddlewareCommand implements CommandInterface
 namespace Addon\Middleware;
 
 use App\Core\Interfaces\MiddlewareInterface;
-use App\Core\Request;
+use App\Core\Http\Request;
 
 class {{CLASS_NAME}} implements MiddlewareInterface
 {

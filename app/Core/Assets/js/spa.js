@@ -4,6 +4,26 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   initSpaNavigation();
+
+  // Initialize Smart Prefetcher based on Config
+  const config = window.mazuConfig?.spa || {};
+
+  if (config.prefetch && window.SpaPrefetcher) {
+    // Check for Save-Data mode
+    const saveData = navigator.connection?.saveData;
+    if (saveData) {
+      console.log("Mazu SPA: Prefetching disabled due to Data Saver mode.");
+      return;
+    }
+
+    window.mazuPrefetcher = new SpaPrefetcher({
+      maxConcurrent: config.prefetch_limit || 5,
+    });
+    window.mazuPrefetcher.init();
+    console.log("Mazu SPA: Smart Prefetcher active", {
+      limit: config.prefetch_limit,
+    });
+  }
 });
 
 function initSpaNavigation() {
@@ -41,14 +61,17 @@ function initSpaNavigation() {
     // Default scroll is true unless explicitly disabled
     let shouldScroll = true;
     if (
-      link.hasAttribute("data-no-scroll") ||
-      link.getAttribute("data-scroll") === "false"
+      link.hasAttribute("data-spa-no-scroll") ||
+      link.getAttribute("data-spa-scroll") === "false"
     ) {
       shouldScroll = false;
     }
 
+    const method = link.getAttribute("data-spa-method")?.toUpperCase() || "GET";
+
     const options = {
       scroll: shouldScroll,
+      method: method,
     };
     navigateTo(url, options);
   });
@@ -75,14 +98,16 @@ function initSpaNavigation() {
 async function navigateTo(url, options = {}) {
   saveCurrentScrollPosition();
 
-  // Update URL di browser dulu (optimistic)
-  if (options.replace) {
-    history.replaceState({ url: url, options: options }, "", url);
-  } else {
-    history.pushState({ url: url, options: options }, "", url);
+  // Update URL di browser dulu (optimistic) untuk GET request
+  if (!options.method || options.method === "GET") {
+    if (options.replace) {
+      history.replaceState({ url: url, options: options }, "", url);
+    } else {
+      history.pushState({ url: url, options: options }, "", url);
+    }
   }
 
-  await loadContent(url, { ...options, pushState: true });
+  await loadContent(url, { ...options, pushState: options.method === "GET" });
 }
 
 // --- CACHE SYSTEM (SWR Support) ---
@@ -90,6 +115,9 @@ const spaCache = new Map();
 // Kita tidak butuh TTL ketat karena kita akan selalu revalidate di background
 // Tapi kita bisa hapus cache yang sudah terlalu lama (misal 5 menit) untuk hemat memori
 const CACHE_TTL = 5 * 60 * 1000;
+
+// Global Controller untuk mengelola pembatalan request (Race Condition Handler)
+let activeNavigationController = null;
 
 function clearSpaCache() {
   spaCache.clear();
@@ -107,12 +135,99 @@ function registerRequestInterceptor(callback) {
   }
 }
 
+function getAuthConfig() {
+  return window.mazuConfig?.auth || {};
+}
+
+function getStorage(storageName) {
+  if (storageName === "sessionStorage") return sessionStorage;
+  if (storageName === "localStorage") return localStorage;
+  return null;
+}
+
+function getCookieValue(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(";").shift() || null;
+  return null;
+}
+
+function deleteCookie(name) {
+  document.cookie = `${name}=; Max-Age=0; path=/`;
+}
+
+function readAuthToken() {
+  const auth = getAuthConfig();
+  const storageName = auth.token_storage || "cookie";
+  const tokenKey = auth.token_key || "token";
+  const cookieName = auth.token_cookie || tokenKey;
+  if (storageName === "cookie") {
+    return getCookieValue(cookieName);
+  }
+  const storage = getStorage(storageName);
+  if (!storage) return null;
+  try {
+    return storage.getItem(tokenKey);
+  } catch (e) {
+    return null;
+  }
+}
+
+function clearAuthStorage() {
+  const auth = getAuthConfig();
+  const storageName = auth.token_storage || "cookie";
+  const tokenKey = auth.token_key || "token";
+  const userKey = auth.user_key || "user";
+  const cookieName = auth.token_cookie || tokenKey;
+  if (storageName === "cookie") {
+    deleteCookie(cookieName);
+    return;
+  }
+  const storage = getStorage(storageName);
+  if (!storage) return;
+  try {
+    storage.removeItem(tokenKey);
+    if (userKey) {
+      storage.removeItem(userKey);
+    }
+  } catch (e) {}
+}
+
+const authConfig = getAuthConfig();
+if (
+  authConfig &&
+  authConfig.mode === "token" &&
+  authConfig.auto_attach !== false
+) {
+  registerRequestInterceptor((headers) => {
+    const token = readAuthToken();
+    if (token) {
+      const headerName = authConfig.token_header || "Authorization";
+      const prefix = authConfig.token_prefix || "Bearer";
+      headers[headerName] = prefix ? `${prefix} ${token}` : token;
+    }
+  });
+}
+
 async function loadContent(url, options = {}) {
   const {
     pushState = true,
     scroll = true,
     ignoreCache = false,
+    method = "GET",
+    body = null,
   } = typeof options === "boolean" ? { pushState: options } : options;
+
+  // --- RACE CONDITION HANDLING ---
+  // Batalkan request navigasi sebelumnya yang mungkin masih berjalan
+  if (activeNavigationController) {
+    activeNavigationController.abort();
+  }
+  // Buat controller baru untuk request ini
+  const controller = new AbortController();
+  activeNavigationController = controller;
+  const { signal } = controller;
+
   startProgressBar();
 
   // Cari container layout terdalam yang aktif saat ini
@@ -120,12 +235,17 @@ async function loadContent(url, options = {}) {
   const loadingContainer =
     targetContainer || document.getElementById("app-content");
 
-  // 1. STRATEGI SWR: Cek Cache & Tampilkan Dulu (Stale)
+  // 1. STRATEGI SWR: Cek Cache & Tampilkan Dulu (Stale) - Hanya untuk GET
   const cached = spaCache.get(url);
   const now = Date.now();
   let isServedFromCache = false;
 
-  if (!ignoreCache && cached && now - cached.timestamp < CACHE_TTL) {
+  if (
+    method === "GET" &&
+    !ignoreCache &&
+    cached &&
+    now - cached.timestamp < CACHE_TTL
+  ) {
     // VALIDASI PENTING: Cek apakah container target layout benar-benar ada di DOM saat ini?
     // Jika kita punya cache untuk "settings/layout", tapi saat ini kita di "dashboard" (yang tidak punya container settings),
     // maka cache ini TIDAK BOLEH dipakai. Kita harus fetch ulang agar server mengirim layout pembungkusnya.
@@ -168,6 +288,16 @@ async function loadContent(url, options = {}) {
     // Browser otomatis menambahkan If-None-Match jika ada di cache HTTP browser
   };
 
+  // Add CSRF Token for non-GET requests
+  if (method !== "GET") {
+    const csrfToken = document
+      .querySelector('meta[name="csrf-token"]')
+      ?.getAttribute("content");
+    if (csrfToken) {
+      headers["X-CSRF-TOKEN"] = csrfToken;
+    }
+  }
+
   // [INTERCEPTOR ENGINE]
   // Jalankan semua registered interceptors untuk memodifikasi headers secara dinamis
   // Ini membuat engine flexible: Support Token, API Key, Custom Headers, dll.
@@ -182,7 +312,10 @@ async function loadContent(url, options = {}) {
   try {
     // 2. REVALIDATE: Fetch ke server (Background jika cache ada)
     const response = await fetch(url, {
+      method: method,
       headers: headers,
+      body: body,
+      signal: signal, // Attach signal untuk pembatalan
     });
 
     // 3. HANDLE RESPONSE
@@ -200,6 +333,20 @@ async function loadContent(url, options = {}) {
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
       const data = await response.json();
+
+      if (data.action === "logout") {
+        const auth = getAuthConfig();
+        if (auth.auto_logout !== false) {
+          clearAuthStorage();
+        }
+        const target = data.redirect || auth.redirect_login || "/login";
+        if (data.force_reload) {
+          window.location.href = target;
+        } else {
+          navigateTo(target, { replace: true });
+        }
+        return;
+      }
 
       if (data.redirect) {
         if (data.new_tab) {
@@ -229,18 +376,29 @@ async function loadContent(url, options = {}) {
       window.location.href = url;
     }
   } catch (error) {
+    // Abaikan error akibat pembatalan manual (Navigasi baru dimulai)
+    if (error.name === "AbortError") {
+      console.log("SPA Navigation aborted:", url);
+      return;
+    }
+
     console.error("SPA Navigation Error:", error);
     // Jika error dan kita tidak punya cache, baru redirect/reload
     if (!isServedFromCache) {
       window.location.href = url;
     }
   } finally {
-    // Bersihkan loading state
-    if (loadingContainer) {
-      loadingContainer.style.opacity = "1";
-      loadingContainer.style.pointerEvents = "auto";
+    // Hanya bersihkan UI jika request ini adalah request yang aktif
+    // Jika request ini dibatalkan oleh request baru, biarkan request baru yang mengurus UI
+    if (activeNavigationController === controller) {
+      // Bersihkan loading state
+      if (loadingContainer) {
+        loadingContainer.style.opacity = "1";
+        loadingContainer.style.pointerEvents = "auto";
+      }
+      finishProgressBar();
+      activeNavigationController = null;
     }
-    finishProgressBar();
   }
 }
 
@@ -511,7 +669,7 @@ function handleAfterNavigation(options = {}) {
   }
 
   // 2. Scroll ke atas (Default: true, untuk navigasi baru)
-  // Bisa dimatikan via data-scroll="false"
+  // Bisa dimatikan via data-spa-scroll="false"
   if (options.scroll !== false) {
     const scrollOptions = { top: 0, left: 0 };
     window.scrollTo(scrollOptions);
@@ -561,3 +719,152 @@ function getScrollParent(node) {
 
   return getScrollParent(node.parentNode);
 }
+
+/**
+ * Smart Prefetcher for Mazu Engine
+ * Handles viewport-based prefetching with concurrency limit
+ */
+class SpaPrefetcher {
+  constructor(options = {}) {
+    this.maxConcurrent = options.maxConcurrent || 5;
+    this.queue = [];
+    this.activeCount = 0;
+    this.observedUrls = new Set();
+    this.cache = spaCache;
+
+    this.observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const link = entry.target;
+            const url = link.href;
+
+            if (url && !this.observedUrls.has(url)) {
+              this.observedUrls.add(url);
+              this.addToQueue(url);
+              // Stop observing once queued
+              this.observer.unobserve(link);
+            }
+          }
+        });
+      },
+      { threshold: 0.1 },
+    );
+  }
+
+  init() {
+    this.observeNewLinks();
+    // Re-observe after SPA navigation
+    window.addEventListener("spa:navigated", () => {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => this.observeNewLinks(), 100);
+    });
+  }
+
+  observeNewLinks() {
+    const currentUrl = new URL(window.location.href);
+
+    document
+      .querySelectorAll(
+        "a[data-spa]:not([data-spa-method='POST']):not([data-spa-method='post']):not([data-prefetched])",
+      )
+      .forEach((link) => {
+        const url = link.href;
+
+        // Check if link points to current page
+        try {
+          const targetUrl = new URL(url, window.location.origin);
+          if (
+            targetUrl.origin === currentUrl.origin &&
+            targetUrl.pathname === currentUrl.pathname &&
+            targetUrl.search === currentUrl.search
+          ) {
+            link.setAttribute("data-prefetched", "true"); // Mark to skip future checks
+            return;
+          }
+        } catch (e) {
+          // Invalid URL, ignore
+        }
+
+        // Skip if already in cache
+        if (this.cache.has(url)) {
+          link.setAttribute("data-prefetched", "true");
+          return;
+        }
+        this.observer.observe(link);
+      });
+  }
+
+  addToQueue(url) {
+    if (this.cache.has(url)) return;
+    this.queue.push(url);
+    this.processQueue();
+  }
+
+  async processQueue() {
+    if (this.activeCount >= this.maxConcurrent || this.queue.length === 0) {
+      return;
+    }
+
+    const url = this.queue.shift();
+    this.activeCount++;
+
+    try {
+      // Prepare headers (Reuse logic from loadContent)
+      const targetContainer = getDeepestLayoutContainer();
+      const targetLayout = targetContainer
+        ? targetContainer.getAttribute("data-layout")
+        : "layout.php";
+
+      const activeLayouts = [];
+      document.querySelectorAll("[data-layout]").forEach((el) => {
+        activeLayouts.push(el.getAttribute("data-layout"));
+      });
+
+      const headers = {
+        "X-SPA-REQUEST": "true",
+        "X-SPA-TARGET-LAYOUT": targetLayout,
+        "X-SPA-LAYOUTS": JSON.stringify(activeLayouts),
+        "X-PREFETCH": "true",
+      };
+
+      // Run interceptors
+      spaConfig.requestInterceptors.forEach((interceptor) => {
+        try {
+          interceptor(headers, url);
+        } catch (e) {}
+      });
+
+      const response = await fetch(url, { headers });
+
+      if (response.status === 304) {
+        // Content hasn't changed, cache is still valid
+        return;
+      }
+
+      if (response.ok) {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const data = await response.json();
+          this.cache.set(url, {
+            data: data,
+            timestamp: Date.now(),
+          });
+
+          // Mark as prefetched in DOM
+          document
+            .querySelectorAll(`a[href="${url}"]`)
+            .forEach((el) => el.setAttribute("data-prefetched", "true"));
+        }
+      }
+    } catch (error) {
+      // Silently fail for prefetch
+    } finally {
+      this.activeCount--;
+      // Small delay before next fetch to be extra gentle on the server
+      setTimeout(() => this.processQueue(), 50);
+    }
+  }
+}
+
+window.SpaPrefetcher = SpaPrefetcher;

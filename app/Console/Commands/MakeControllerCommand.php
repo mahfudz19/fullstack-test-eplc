@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Core\Application;
+use App\Core\Foundation\Application;
 use App\Console\Contracts\CommandInterface;
 
 class MakeControllerCommand implements CommandInterface
@@ -52,10 +52,10 @@ class MakeControllerCommand implements CommandInterface
 
 namespace Addon\Controllers;
 
-use App\Core\Request;
-use App\Core\Response;
-use App\Core\View;
-use App\Core\RedirectResponse;
+use App\Core\Http\Request;
+use App\Core\Http\Response;
+use App\Core\View\View;
+use App\Core\Http\RedirectResponse;
 use Addon\Models\{{MODEL_NAME}};
 
 class {{CLASS_NAME}}
@@ -130,9 +130,9 @@ PHP;
 
 namespace Addon\Controllers;
 
-use App\Core\Request;
-use App\Core\Response;
-use App\Core\View;
+use App\Core\Http\Request;
+use App\Core\Http\Response;
+use App\Core\View\View;
 
 class {{CLASS_NAME}}
 {

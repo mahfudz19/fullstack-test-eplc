@@ -2,7 +2,7 @@
 
 namespace Addon\Models;
 
-use App\Core\Model;
+use App\Core\Database\Model;
 
 class UserModel extends Model
 {

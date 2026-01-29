@@ -2,9 +2,8 @@
 
 namespace App\Services;
 
-use App\Core\View;
-use App\Core\Request;
-use App\Services\ConfigService;
+use App\Core\Http\Request;
+use App\Core\View\View;
 use App\Exceptions\HttpException;
 
 class ViewService
@@ -118,7 +117,6 @@ class ViewService
         // [AUTO-DISCOVERY] Cek CSS untuk Layout
         // Kita daftarkan style untuk SETIAP layout dalam hirarki (parent maupun child)
         // agar daftar 'styles' di respon JSON selalu konsisten, tidak peduli di level mana layout match terjadi.
-        // Ini memperbaiki masalah ETag mismatch (200->200) menjadi (200->304).
         $this->detectAndRegisterStyle($layoutToUse, $rootViewsPath);
 
         $relativeLayoutPath = ltrim(str_replace($rootViewsPath, '', $layoutToUse), '/');

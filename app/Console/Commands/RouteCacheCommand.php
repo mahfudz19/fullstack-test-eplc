@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Core\Application;
+use App\Core\Foundation\Application;
 use App\Console\Contracts\CommandInterface;
 
 class RouteCacheCommand implements CommandInterface

@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Core\PageMeta;
-use App\Core\Request;
+use App\Core\Http\Request;
 
 class SeoService
 {

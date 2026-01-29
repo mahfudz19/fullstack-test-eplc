@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-  <?= App\Core\View::renderMeta($meta) ?>
+  <?= App\Core\View\View::renderMeta($meta) ?>
 
   <!-- Link ke file CSS yang sudah di-generate oleh Tailwind CLI -->
   <!-- Google Fonts - Pindahkan ke sini -->
@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
 
   <!-- Auto-Injected Styles -->
-  <?= App\Core\View::renderStyles() ?>
+  <?= App\Core\View\View::renderStyles() ?>
 
   <!-- Bootstrap Icons (opsional) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -29,7 +29,7 @@
   </div>
 
   <!-- SPA Script -->
-  <?= App\Core\View::renderScripts() ?>
+  <?= App\Core\View\View::renderScripts() ?>
 
   <!-- Global Application Config & Interceptors -->
   <script>

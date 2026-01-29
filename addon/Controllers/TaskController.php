@@ -2,10 +2,10 @@
 
 namespace Addon\Controllers;
 
-use App\Core\Request;
-use App\Core\Response;
-use App\Core\View;
 use Addon\Models\TaskModel;
+use App\Core\Http\Request;
+use App\Core\Http\Response;
+use App\Core\View\View;
 
 class TaskController
 {

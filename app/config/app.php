@@ -23,31 +23,36 @@ if (!function_exists('detectEnvironment')) {
 }
 
 $environment = detectEnvironment();
+$isDev = $environment === 'development';
 
-if ($environment === 'development') {
-  return [
-    'db' => [
-      'host'     => env('DB_HOST', 'localhost'),
-      'dbname'   => env('DB_NAME', 'fullstack-test-eplc'),
-      'username' => env('DB_USER', 'root'),
-      'password' => env('DB_PASS', 'root')
-    ],
-    'debug' => env('APP_DEBUG', 'true') === 'true',
-    'app_name' => env('APP_NAME', 'MAZU'),
-    'database' => require __DIR__ . '/database.php',
-    'view' => require __DIR__ . '/view.php',
-  ];
-} else {
-  return [
-    'db' => [
-      'host'     => env('DB_HOST', 'localhost'),
-      'dbname'   => env('DB_NAME', 'fullstack-test-eplc'),
-      'username' => env('DB_USER', 'root'),
-      'password' => env('DB_PASS', '')
-    ],
-    'debug' => env('APP_DEBUG', 'false') === 'true',
-    'app_name' => env('APP_NAME', 'MAZU'),
-    'database' => require __DIR__ . '/database.php',
-    'view' => require __DIR__ . '/view.php',
-  ];
-}
+return [
+  'environment' => $environment,
+
+  'debug' => env('APP_DEBUG', $isDev ? 'true' : 'false') === 'true',
+  'app_name' => env('APP_NAME', 'MAZU'),
+
+  'spa' => [
+    'prefetch' => env('SPA_PREFETCH', 'false') === 'true',
+    'prefetch_limit' => (int) env('SPA_PREFETCH_LIMIT', 0),
+  ],
+
+  'auth' => [
+    'mode' => env('AUTH_MODE', 'token'),
+    'token_header' => env('AUTH_TOKEN_HEADER', 'Authorization'),
+    'token_prefix' => env('AUTH_TOKEN_PREFIX', 'Bearer'),
+    'token_key' => env('AUTH_TOKEN_KEY', 'token'),
+    'token_cookie' => env('AUTH_TOKEN_COOKIE', 'token'),
+    'user_key' => env('AUTH_USER_KEY', 'user'),
+    'token_storage' => env('AUTH_TOKEN_STORAGE', 'cookie'),
+    'session_key' => env('AUTH_SESSION_KEY', 'user_id'),
+    'redirect_login' => env('AUTH_REDIRECT_LOGIN', '/login'),
+    'auto_attach' => env('AUTH_AUTO_ATTACH', 'true') === 'true',
+    'auto_logout' => env('AUTH_AUTO_LOGOUT', 'true') === 'true',
+    'token_value' => env('TOKEN', 'secret-token-123'),
+    'custom_guard' => null,
+  ],
+
+  // Modular Configurations
+  'database' => require __DIR__ . '/database.php',
+  'view' => require __DIR__ . '/view.php',
+];

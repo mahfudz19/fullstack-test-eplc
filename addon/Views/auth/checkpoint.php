@@ -39,7 +39,7 @@
     const token = localStorage.getItem('token');
 
     if (!token) {
-      window.location.replace('/login');
+      window.location.replace('<?= getBaseUrl('/login') ?>');
       return;
     }
 
@@ -47,7 +47,7 @@
       window.spa.refresh();
     } else {
       console.error("SPA Engine not loaded in checkpoint.");
-      window.location.replace('/login');
+      window.location.replace('<?= getBaseUrl('/login') ?>');
     }
   });
 </script>

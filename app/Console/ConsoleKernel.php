@@ -2,7 +2,6 @@
 
 namespace App\Console;
 
-use App\Core\Application;
 use App\Console\Contracts\CommandInterface;
 use App\Console\Commands\MakeControllerCommand;
 use App\Console\Commands\MakeModelCommand;
@@ -12,6 +11,7 @@ use App\Console\Commands\RouteCacheCommand;
 use App\Console\Commands\BuildCommand;
 use App\Console\Commands\ServeCommand;
 use App\Console\Commands\AboutCommand;
+use App\Core\Foundation\Application;
 
 class ConsoleKernel
 {

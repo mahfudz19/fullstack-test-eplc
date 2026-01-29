@@ -2,17 +2,17 @@
 
 namespace App\Providers;
 
-use App\Core\Container;
-use App\Core\Database;
-use App\Core\DatabaseManager;
-use App\Core\JobDispatcher;
-use App\Core\Request;
-use App\Core\Response;
-use App\Core\ServiceProvider;
+use Addon\Services\FeederApiService;
+use App\Core\Database\Database;
+use App\Core\Database\DatabaseManager;
+use App\Core\Foundation\Container;
+use App\Core\Foundation\ServiceProvider;
+use App\Core\Http\Request;
+use App\Core\Http\Response;
+use App\Core\Queue\JobDispatcher;
 use App\Services\ConfigService;
 use App\Services\SeoService;
 use App\Services\SessionService;
-use Addon\Services\FeederApiService;
 use Predis\Client as RedisClient;
 
 class AppServiceProvider extends ServiceProvider

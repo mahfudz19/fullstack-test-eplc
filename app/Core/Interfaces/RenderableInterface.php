@@ -1,6 +1,9 @@
 <?php
 
-namespace App\Core;
+namespace App\Core\Interfaces;
+
+use App\Core\Foundation\Container;
+use App\Core\Http\Response;
 
 interface RenderableInterface
 {

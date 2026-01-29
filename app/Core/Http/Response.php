@@ -1,6 +1,10 @@
 <?php
 
-namespace App\Core;
+namespace App\Core\Http;
+
+use App\Core\Foundation\Container;
+use App\Core\View\PageMeta;
+use App\Core\View\View;
 
 class Response
 {
@@ -37,6 +41,8 @@ class Response
 
   public function send(): void
   {
+    $this->prepare();
+
     // Kirim status code
     http_response_code($this->statusCode);
 
@@ -47,6 +53,43 @@ class Response
 
     // Kirim konten
     echo $this->content;
+  }
+
+  protected function prepare(): void
+  {
+    if (!$this->container) return;
+
+    /** @var Request $request */
+    $request = $this->container->resolve(Request::class);
+
+    if ($this->statusCode === 200 && !empty($this->content)) {
+      $etag = '"' . md5($this->content) . '"';
+      $this->setHeader('ETag', $etag);
+      $this->setHeader('Cache-Control', 'no-cache, must-revalidate');
+
+      $ifNoneMatch = $request->header('If-None-Match');
+      if ($ifNoneMatch && trim($ifNoneMatch) === $etag) {
+        $this->setStatusCode(304);
+        $this->setContent('');
+        return;
+      }
+    }
+
+    // 2. GZIP Implementation
+    if ($this->statusCode === 200 && !empty($this->content) && strlen($this->content) > 2048) {
+      $acceptEncoding = $request->server['HTTP_ACCEPT_ENCODING'] ?? '';
+      if (str_contains($acceptEncoding, 'gzip') && function_exists('gzencode')) {
+        // Jangan kompres jika sudah dikompres (misal dari View)
+        if (!isset($this->headers['Content-Encoding'])) {
+          $compressed = gzencode($this->content, 6);
+          if ($compressed !== false) {
+            $this->setContent($compressed);
+            $this->setHeader('Content-Encoding', 'gzip');
+            $this->setHeader('Content-Length', (string)strlen($this->content));
+          }
+        }
+      }
+    }
   }
 
   public function redirect(string $url, int $statusCode = 302): RedirectResponse
@@ -88,7 +131,7 @@ class Response
     return new View($this->container, $path, $props, $pageMeta);
   }
 
-  public function json($data, int $status = 200): JsonResponse
+  public function json(mixed $data, int $status = 200): JsonResponse
   {
     return new JsonResponse($this->container, $data, $status);
   }

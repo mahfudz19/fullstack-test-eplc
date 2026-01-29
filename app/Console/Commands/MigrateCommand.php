@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Core\Application;
+use App\Core\Foundation\Application;
 use App\Console\Contracts\CommandInterface;
-use App\Core\ModelSchemaMigrator;
-use App\Core\DatabaseManager;
+use App\Core\Database\DatabaseManager;
+use App\Core\Database\ModelSchemaMigrator;
 use Throwable;
 
 class MigrateCommand implements CommandInterface

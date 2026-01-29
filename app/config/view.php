@@ -13,6 +13,9 @@ return [
   | Jika callback mengembalikan string kosong, tidak ada suffix yang ditambahkan.
   |
   */
+  'layout_suffix_generator' => function () {
+    return $_SESSION['role'] ?? '';
+  },
 
   /*
   |--------------------------------------------------------------------------

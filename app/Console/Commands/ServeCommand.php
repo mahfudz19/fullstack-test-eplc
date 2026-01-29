@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Core\Application;
+use App\Core\Foundation\Application;
 use App\Console\Contracts\CommandInterface;
 
 class ServeCommand implements CommandInterface
@@ -69,8 +69,8 @@ class ServeCommand implements CommandInterface
 
     // Environment variables for the child process
     // Filter $_SERVER to remove non-scalar values (like 'argv') to avoid Array to string conversion warning
-    $cleanServerEnv = array_filter($_SERVER, function($value) {
-        return is_scalar($value);
+    $cleanServerEnv = array_filter($_SERVER, function ($value) {
+      return is_scalar($value);
     });
 
     $env = array_merge($cleanServerEnv, [

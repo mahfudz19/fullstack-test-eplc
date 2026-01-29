@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Core;
+namespace App\Core\Queue;
 
-use App\Core\DatabaseManager;
+use App\Core\Database\DatabaseManager;
 use App\Core\Queue\RedisQueue;
 use App\Core\Queue\QueueInterface;
 

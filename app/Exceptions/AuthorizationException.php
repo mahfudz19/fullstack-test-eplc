@@ -2,12 +2,13 @@
 
 namespace App\Exceptions;
 
-use App\Core\Container;
-use App\Core\RedirectResponse;
-use App\Core\Response;
-use App\Core\View;
+use App\Core\Foundation\Container;
+use App\Core\Http\RedirectResponse;
+use App\Core\Http\Response;
+use App\Core\Interfaces\RenderableInterface;
+use App\Core\View\PageMeta;
+use App\Core\View\View;
 use App\Services\ViewService;
-use App\Core\RenderableInterface;
 
 class AuthorizationException extends \Exception implements RenderableInterface
 {
@@ -29,7 +30,7 @@ class AuthorizationException extends \Exception implements RenderableInterface
     /** @var ViewService $viewService */
     $viewService = $container->resolve(ViewService::class);
 
-    $errorMeta = new \App\Core\PageMeta('Error 403');
+    $errorMeta = new PageMeta('Error 403');
     $errorView = new View(
       $container,
       'error',
