@@ -8,10 +8,9 @@ class RedisQueue implements QueueInterface
 {
   private $redis;
 
-  public function __construct(DatabaseManager $db)
+  public function __construct(DatabaseManager $db, string $connection = 'redis_queue')
   {
-    // Pastikan DatabaseManager sudah kita refaktor untuk support 'redis' connection
-    $this->redis = $db->connection('redis_queue');
+    $this->redis = $db->connection($connection);
   }
 
   public function push(string $jobClass, array $data = [], string $queue = 'default')

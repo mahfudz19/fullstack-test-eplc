@@ -98,29 +98,29 @@ class BuildCommand implements CommandInterface
   private function minifyJs(string $path): void
   {
     $content = file_get_contents($path);
-    
+
     // Simple JS Minifier (Safe Mode)
     // 1. Remove block comments
     $content = preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $content);
-    
+
     // 2. Remove line comments (hati-hati dengan URL http://)
     // Regex ini mencari // yang tidak didahului oleh : (untuk menghindari http://)
     // dan tidak berada dalam string. Ini cukup kompleks, jadi kita gunakan pendekatan aman:
     // Hanya hapus baris yang diawali dengan // (setelah trim) atau // di akhir baris yang aman.
-    
+
     // Split lines
     $lines = explode("\n", $content);
     $newLines = [];
     foreach ($lines as $line) {
-        $trim = trim($line);
-        // Skip empty lines or full comment lines
-        if (empty($trim) || str_starts_with($trim, '//')) {
-            continue;
-        }
-        // Remove trailing comments (simple check)
-        // Note: This is risky without a parser if // appears inside a string like "http://..."
-        // So we will just trim whitespace for safety in "Pure PHP" mode without tokenizer.
-        $newLines[] = $trim;
+      $trim = trim($line);
+      // Skip empty lines or full comment lines
+      if (empty($trim) || str_starts_with($trim, '//')) {
+        continue;
+      }
+      // Remove trailing comments (simple check)
+      // Note: This is risky without a parser if // appears inside a string like "http://..."
+      // So we will just trim whitespace for safety in "Pure PHP" mode without tokenizer.
+      $newLines[] = $trim;
     }
     $content = implode("\n", $newLines);
 

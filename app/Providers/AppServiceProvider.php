@@ -63,7 +63,10 @@ class AppServiceProvider extends ServiceProvider
 
     // JobDispatcher (singleton)
     $container->singleton(JobDispatcher::class, function () use ($container) {
-      return new JobDispatcher($container->resolve(DatabaseManager::class));
+      return new JobDispatcher(
+        $container->resolve(DatabaseManager::class),
+        $container->resolve(ConfigService::class)
+      );
     });
 
     // FeederApiService (bisa per request, tidak perlu singleton)

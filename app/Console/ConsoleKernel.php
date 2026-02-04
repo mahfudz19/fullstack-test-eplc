@@ -10,6 +10,8 @@ use App\Console\Commands\MigrateCommand;
 use App\Console\Commands\RouteCacheCommand;
 use App\Console\Commands\BuildCommand;
 use App\Console\Commands\ServeCommand;
+use App\Console\Commands\QueueWorkCommand;
+use App\Console\Commands\MakeJobCommand;
 use App\Console\Commands\AboutCommand;
 use App\Core\Foundation\Application;
 
@@ -35,6 +37,8 @@ class ConsoleKernel
     $this->add(new RouteCacheCommand($this->app));
     $this->add(new BuildCommand($this->app));
     $this->add(new ServeCommand($this->app));
+    $this->add(new QueueWorkCommand($this->app));
+    $this->add(new MakeJobCommand($this->app));
     $this->add(new AboutCommand($this->app));
   }
 

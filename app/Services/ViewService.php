@@ -84,6 +84,8 @@ class ViewService
     require $contentPath;
     $html = ob_get_clean();
 
+    $this->detectAndInjectScript($contentPath, $rootViewsPath, $html);
+
     // 2. Berjalan ke atas dari direktori konten, terapkan setiap layout yang ditemukan.
     $currentDir = dirname($contentPath);
 
@@ -154,6 +156,8 @@ class ViewService
           ob_start();
           require $layoutToUse; // Gunakan path yang ditemukan.
           $html = ob_get_clean(); // HTML yang baru adalah hasil dari layout yang membungkus children.
+
+          $this->detectAndInjectScript($layoutToUse, $rootViewsPath, $html);
         }
       }
       // --- AKHIR PERUBAHAN ---
@@ -211,6 +215,33 @@ class ViewService
         $relativePath = ltrim(str_replace($rootViewsPath, '', $cssPathSidebar), '/');
         View::addStyle($relativePath);
       }
+    }
+  }
+
+  /**
+   * Helper: Mendeteksi keberadaan file JS pendamping dan menyuntikkannya ke HTML.
+   */
+  private function detectAndInjectScript(string $phpFilePath, string $rootViewsPath, string &$html): void
+  {
+    $jsPath = null;
+
+    // 1. Cek file JS dengan nama yang sama (misal: index.php -> index.js)
+    $jsPathSameName = preg_replace('/\.php$/', '.js', $phpFilePath);
+    if (file_exists($jsPathSameName)) {
+      $jsPath = $jsPathSameName;
+    } else {
+      // 2. Jika tidak ada, cek script.js di folder yang sama
+      $jsPathScript = dirname($phpFilePath) . '/script.js';
+      if (file_exists($jsPathScript)) {
+        $jsPath = $jsPathScript;
+      }
+    }
+
+    if ($jsPath) {
+      $relativePath = ltrim(str_replace($rootViewsPath, '', $jsPath), '/');
+      // Gunakan helper getBaseUrl (asumsi tersedia global, sama seperti di View::renderStyles)
+      $url = getBaseUrl('build/assets/' . $relativePath);
+      $html .= PHP_EOL . '<script src="' . $url . '"></script>' . PHP_EOL;
     }
   }
 

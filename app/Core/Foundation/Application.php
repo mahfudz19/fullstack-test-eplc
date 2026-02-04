@@ -100,7 +100,43 @@ class Application
       $response = $e->render($this->container);
     } catch (\Throwable $e) {
       if (env('APP_DEBUG') === 'true') dump($e);
-      $response = $this->renderFallbackError(500, 'Terjadi kesalahan internal pada server.', $e);
+
+      $code = 500;
+      $message = 'Terjadi kesalahan internal pada server.';
+
+      // Deteksi error tabel database tidak ditemukan
+      if (strpos($e->getMessage(), 'Base table or view not found') !== false) {
+        $message = 'Terjadi kesalahan Database: Tabel tidak ditemukan. Pastikan Anda sudah menjalankan migrasi database.';
+
+        // Coba ambil nama tabel yang hilang untuk info lebih detail
+        if (preg_match("/Table '(.+?)' doesn't exist/", $e->getMessage(), $matches)) {
+          $message .= " (Tabel yang hilang: {$matches[1]})";
+        }
+      }
+
+      try {
+        /** @var \App\Services\ViewService $viewService */
+        $viewService = $this->container->resolve(\App\Services\ViewService::class);
+
+        $errorMeta = new PageMeta('Error ' . $code);
+
+        $errorViewPath = 'error';
+        if (file_exists(__DIR__ . '/../../../addon/Views/error/index.php')) {
+          $errorViewPath = 'error/index';
+        }
+
+        $errorView = new View(
+          $this->container,
+          $errorViewPath,
+          ['code' => $code, 'message' => $message],
+          $errorMeta
+        );
+
+        $html = $viewService->render($errorView);
+        $response = new Response($this->container, $html, $code);
+      } catch (\Throwable $renderError) {
+        $response = $this->renderFallbackError($code, $message, $e);
+      }
     }
 
     $response->send();
@@ -150,7 +186,40 @@ class Application
 
   private function renderFallbackError(int $code, string $message, ?\Throwable $e = null): Response
   {
-    // ... logika fallback error tetap sama, sesuaikan path file jika perlu ...
-    return new Response($this->container, "Critical Error: " . $message, $code);
+    $debugInfo = '';
+    if ($e && env('APP_DEBUG') === 'true') {
+      $debugInfo = "
+        <div style='margin-top: 20px; padding: 10px; background: #f1f1f1; border-radius: 5px; overflow-x: auto;'>
+          <strong>Debug Info:</strong><br>
+          File: {$e->getFile()}:{$e->getLine()}<br>
+          Message: {$e->getMessage()}<br>
+          <pre>" . $e->getTraceAsString() . "</pre>
+        </div>";
+    }
+
+    $html = "
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Critical Error {$code}</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f8f9fa; color: #333; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+            .container { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 800px; width: 90%; }
+            h1 { color: #dc3545; margin-top: 0; }
+            p { font-size: 1.1em; line-height: 1.6; }
+            code { background: #f1f1f1; padding: 2px 5px; border-radius: 3px; color: #d63384; }
+          </style>
+        </head>
+        <body>
+          <div class='container'>
+            <h1>Critical Error ({$code})</h1>
+            <p>{$message}</p>
+            {$debugInfo}
+          </div>
+        </body>
+      </html>
+    ";
+
+    return new Response($this->container, $html, $code);
   }
 }
