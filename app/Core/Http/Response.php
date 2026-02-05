@@ -81,7 +81,7 @@ class Response
       if (str_contains($acceptEncoding, 'gzip') && function_exists('gzencode')) {
         // Jangan kompres jika sudah dikompres (misal dari View)
         if (!isset($this->headers['Content-Encoding'])) {
-          $compressed = gzencode($this->content, 6);
+          $compressed = gzencode($this->content, 9);
           if ($compressed !== false) {
             $this->setContent($compressed);
             $this->setHeader('Content-Encoding', 'gzip');

@@ -10,7 +10,7 @@ return [
       'database' => env('DB_NAME', 'fullstack-test-eplc'),
       'username' => env('DB_USER', 'root'),
       'password' => env('DB_PASS', 'root'),
-      'unix_socket' => env('DB_SOCKET', '/Applications/MAMP/tmp/mysql/mysql.sock'),
+      'unix_socket' => env('DB_SOCKET', $isDev ? '/Applications/MAMP/tmp/mysql/mysql.sock' : null),
       'charset' => 'utf8mb4',
       'options' => [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
