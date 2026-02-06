@@ -65,8 +65,7 @@ class View implements RenderableInterface
   {
     $html = '';
     foreach (self::$styles as $stylePath) {
-      // Mengarah ke build/assets/... (Dev: dilayani AssetController, Prod: static file)
-      $url = getBaseUrl('build/assets/' . $stylePath);
+      $url = asset('assets/' . $stylePath);
       $html .= '<link rel="stylesheet" href="' . $url . '">' . PHP_EOL;
     }
     return $html;
@@ -168,7 +167,7 @@ class View implements RenderableInterface
 
     $html = '';
     $html .= '<script>window.mazuConfig = ' . json_encode(['spa' => $spaConfig, 'auth' => $authPublic]) . ';</script>' . PHP_EOL;
-    $html .= '<script src="' . getBaseUrl('build/js/spa.js') . '"></script>' . PHP_EOL;
+    $html .= '<script src="' . asset('js/spa.js') . '"></script>' . PHP_EOL;
     return $html;
   }
 

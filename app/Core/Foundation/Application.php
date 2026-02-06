@@ -171,6 +171,9 @@ class Application
 
     if (isProduction() && file_exists($cachePath)) {
       $this->router->setRoutes(require $cachePath);
+      $this->router->get('build/assets/(.*)', [\App\Core\Controllers\AssetController::class, 'serve']);
+      $this->router->get('build/js/(.*)', [\App\Core\Controllers\AssetController::class, 'serve']);
+
       return;
     }
 

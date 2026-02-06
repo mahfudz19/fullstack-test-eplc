@@ -35,8 +35,8 @@ $app->boot();
 $router = $app->getRouter();
 
 // Pastikan rute sistem disertakan dalam cache (fix untuk build/js yang hilang)
-$router->get('/build/assets/(.*)', 'App\Controllers\System\AssetController@serve');
-$router->get('/build/js/(.*)', 'App\Controllers\System\AssetController@serveJs');
+$router->get('/build/assets/(.*)', 'App\Core\Controllers\AssetController@serve');
+$router->get('/build/js/(.*)', 'App\Core\Controllers\AssetController@serve');
 
 $routes = $router->getRoutes();
 

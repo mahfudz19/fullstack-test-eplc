@@ -173,13 +173,37 @@ class ViewService
 
     // Jika ini request SPA dan kita menemukan match di tengah jalan
     if ($isSpaRequest && $foundMatch) {
+      // Resolusi hash untuk styles agar cache busting bekerja di SPA
+      $styles = array_map(function ($style) {
+        // Load manifest manual karena helper asset() mengembalikan Full URL
+        static $manifest = null;
+        if ($manifest === null) {
+          $manifestPath = __DIR__ . '/../../public/build/manifest.json';
+          if (file_exists($manifestPath)) {
+            $manifest = json_decode(file_get_contents($manifestPath), true);
+          } else {
+            $manifest = [];
+          }
+        }
+
+        $key = 'assets/' . $style;
+        if (isset($manifest[$key])) {
+          // Manifest value: assets/(app)/.../style.hash.css
+          // Kita butuh: (app)/.../style.hash.css (buang 'assets/' prefix)
+          // Karena spa.js akan menambahkan 'build/assets/' di depannya.
+          return substr($manifest[$key], 7); // 7 = strlen('assets/')
+        }
+        
+        return $style;
+      }, View::getStyles());
+
       return json_encode([
         'html' => $html,
         'meta' => [
           'title' => $view->meta->title,
           'csrf_token' => csrf_token(),
           'layout' => $layoutHierarchy, // Mengirim ARRAY layout [child, parent, root]
-          'styles' => View::getStyles()
+          'styles' => $styles
         ]
       ]);
     }
@@ -239,8 +263,8 @@ class ViewService
 
     if ($jsPath) {
       $relativePath = ltrim(str_replace($rootViewsPath, '', $jsPath), '/');
-      // Gunakan helper getBaseUrl (asumsi tersedia global, sama seperti di View::renderStyles)
-      $url = getBaseUrl('build/assets/' . $relativePath);
+      // Gunakan helper asset() agar menggunakan versioning (hash)
+      $url = asset('assets/' . $relativePath);
       $html .= PHP_EOL . '<script src="' . $url . '"></script>' . PHP_EOL;
     }
   }

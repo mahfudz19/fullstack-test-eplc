@@ -5,6 +5,14 @@
  * Loads environment variables from .env file if exists
  */
 
+if (!function_exists('getEnvPath')) {
+  function getEnvPath($envFile = '.env')
+  {
+    return __DIR__ . '/../../' . ltrim($envFile, '/');
+    // return __DIR__ . '/../../../.config/' . ltrim($envFile, '/');
+  }
+}
+
 if (!function_exists('loadEnvironmentConfig')) {
   function loadEnvironmentConfig($envFile = '.env')
   {
@@ -13,8 +21,7 @@ if (!function_exists('loadEnvironmentConfig')) {
       return;
     }
 
-    $envPath = __DIR__ . '/../../' . ltrim($envFile, '/');
-    // $envPath = __DIR__ . '/../../../.config/' . ltrim($envFile, '/');
+    $envPath = getEnvPath($envFile);
     if (!file_exists($envPath)) {
       $loaded = true;
       return;
@@ -561,8 +568,51 @@ if (!function_exists('color')) {
       'red'    => "\033[31m",
       'blue'   => "\033[34m",
       'cyan'   => "\033[36m",
+      'bold'   => "\033[1m",
+      'dim'    => "\033[2m",
+      'gray'   => "\033[90m",
       'reset'  => "\033[0m"
     ];
-    return ($codes[$color] ?? '') . $text . $codes['reset'];
+
+    // Dukungan untuk multiple styles (misal: 'bold,green')
+    $requested = explode(',', $color);
+    $prefix = '';
+    foreach ($requested as $style) {
+      $prefix .= ($codes[trim($style)] ?? '');
+    }
+
+    return $prefix . $text . $codes['reset'];
+  }
+}
+
+if (!function_exists('asset')) {
+  /**
+   * Get the path to a versioned asset file.
+   *
+   * @param string $path
+   * @return string
+   */
+  function asset($path)
+  {
+    static $manifest = null;
+
+    if ($manifest === null) {
+      $manifestPath = __DIR__ . '/../../public/build/manifest.json';
+      if (file_exists($manifestPath)) {
+        $manifest = json_decode(file_get_contents($manifestPath), true);
+      } else {
+        $manifest = [];
+      }
+    }
+
+    $path = ltrim($path, '/');
+
+    // Cek apakah ada di manifest
+    if (isset($manifest[$path])) {
+      return getBaseUrl('build/' . $manifest[$path]);
+    }
+
+    // Fallback development (langsung ke build path)
+    return getBaseUrl('build/' . $path);
   }
 }
