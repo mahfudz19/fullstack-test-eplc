@@ -30,6 +30,7 @@ return [
 
   'debug' => env('APP_DEBUG', $isDev ? 'true' : 'false') === 'true',
   'app_name' => env('APP_NAME', 'MAZU'),
+  'timezone' => env('APP_TIMEZONE', date_default_timezone_get()),
 
   'spa' => [
     'prefetch' => env('SPA_PREFETCH', 'false') === 'true',

@@ -25,12 +25,15 @@ class AppServiceProvider extends ServiceProvider
     });
 
     // ConfigService (singleton)
-    $container->bind(ConfigService::class, function () {
-      static $instance = null;
-      if ($instance === null) {
-        $instance = new ConfigService();
-      }
-      return $instance;
+    // Kita instansiasi di awal untuk menerapkan konfigurasi global (seperti Timezone)
+    $configService = new ConfigService();
+    
+    if ($timezone = $configService->get('timezone')) {
+      date_default_timezone_set($timezone);
+    }
+
+    $container->bind(ConfigService::class, function () use ($configService) {
+      return $configService;
     });
 
     // SessionService (singleton)
