@@ -187,10 +187,7 @@ class BuildCommand implements CommandInterface
     // Sort by size descending
     usort($assets, fn($a, $b) => $b['size'] <=> $a['size']);
 
-    // Ambil top 10 terbesar
-    $topAssets = array_slice($assets, 0, 10);
-
-    foreach ($topAssets as $asset) {
+    foreach ($assets as $asset) {
       $sizeFormatted = $this->formatBytes($asset['size']);
       $name = $asset['name'];
 
@@ -200,10 +197,6 @@ class BuildCommand implements CommandInterface
       if ($asset['size'] > 500 * 1024) $sizeColor = 'red';    // > 500KB
 
       $this->printLineWithDots($name, $sizeFormatted, $sizeColor);
-    }
-
-    if (count($assets) > 10) {
-      echo "     " . color("... and " . (count($assets) - 10) . " more files.", "dim") . "\n";
     }
   }
 
