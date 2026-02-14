@@ -23,8 +23,8 @@ echo color("
  |_|  |_| /_/   \_\ /____|   \____/ 
 ", "green");
 
-echo " " . color("Mazu Framework", "green") . " version " . color("1.0.0", "yellow") . "\n";
-echo " " . color("By", "green") . " " . color("Mahfudz Masyhur", "yellow") . "\n\n";
+echo " " . color("MAZU FRAMEWORK", "bold,green") . " version " . color("1.0.0", "yellow") . "\n";
+echo " " . color("By", "dim") . " " . color("Mahfudz Masyhur", "yellow") . "\n\n";
 
 // 4. Delegasi ke Console Kernel
 $kernel = new App\Console\ConsoleKernel($app);
