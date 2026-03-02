@@ -110,11 +110,21 @@ class Application
           'code' => 401
         ], 401);
       } else {
-        $response = new RedirectResponse($this->container, $e->getRedirectTo() ?? 'login');
+        if ($e->shouldHardRedirect()) {
+          $response = new RedirectResponse($this->container, $e->getRedirectTo() ?? getBaseUrl('/login'));
+          $response->hard();
+        } else {
+          $response = new RedirectResponse($this->container, $e->getRedirectTo() ?? getBaseUrl('/login'));
+        }
       }
     } catch (AuthorizationException $e) {
       if ($e->getMessage() === 'RedirectIfAuthenticated') {
-        $response = new RedirectResponse($this->container, $e->getRedirectTo() ?? '');
+        if ($e->shouldHardRedirect()) {
+          $response = new RedirectResponse($this->container, $e->getRedirectTo() ?? getBaseUrl('/'));
+          $response->hard();
+        } else {
+          $response = new RedirectResponse($this->container, $e->getRedirectTo() ?? getBaseUrl('/'));
+        }
       } else {
         $wantsJson = $this->request->wantsJson() || str_starts_with($this->request->getPath(), '/api');
         if ($wantsJson) {
